@@ -4,7 +4,7 @@ type AxisConfig = {
     lines?: number
 }
 
-type MafsCoordsCardProps = {
+type CoordsCardTwoDProps = {
     viewBox: {
         x: [number, number]
         y: [number, number]
@@ -19,14 +19,14 @@ type MafsCoordsCardProps = {
     children?: React.ReactNode
 }
 
-export function MafsCoordsCard({
+export function CoordsCardTwoD({
     viewBox,
     xAxis = { lines: 1 },
     yAxis = { lines: 1 },
     zoom = true,
     height = 400,
     children,
-}: MafsCoordsCardProps) {
+}: CoordsCardTwoDProps) {
     return (
         <div style={{ height }} className="w-full rounded-lg overflow-hidden">
             <Mafs viewBox={viewBox} zoom={zoom}>

@@ -1,16 +1,16 @@
 import Card from "./Card";
-import { MafsCoordsCard } from "./MafsCoordsCard";
+import { CoordsCardTwoD } from "./CoordsCardTwoD";
 
 export default function GraphTest() {
     return (
         <Card title={"Graph Test"} description={"testing"}>
-            <MafsCoordsCard viewBox={{
+            <CoordsCardTwoD viewBox={{
                 x: [-4,4],
                 y: [-4,4],
                 padding: undefined
             }}>
                 
-            </MafsCoordsCard>
+            </CoordsCardTwoD>
         </Card>
         
     )

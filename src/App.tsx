@@ -3,6 +3,8 @@ import UnitCircleVisualization from './components/UnitCircleVisualisation';
 import Card from './components/Card';
 import { TransformFunction } from './components/TransformFunction';
 import GraphTest from './components/GraphTest';
+import ThreeDScene from './components/ThreeDScene';
+import ThreeDAxisTest from './components/ThreeDAxisTest';
 
 export default function App() {
   return (
@@ -15,6 +17,7 @@ export default function App() {
         
         <TransformFunction/>
         <GraphTest/>
+        <ThreeDAxisTest/>
 
         <Card title="Test Card" description="This is a test">
           <div className="p-4">
@@ -29,6 +32,7 @@ export default function App() {
         
         <UnitCircleVisualization />
         <PlaneVisualization />
+        <ThreeDScene/>
       </div>
     </div>
   );
