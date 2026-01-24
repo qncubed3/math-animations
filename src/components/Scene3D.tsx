@@ -15,12 +15,12 @@ export default function Scene3D({ children, height = '500px' }: Scene3DProps) {
       border: '1px solid #333',
       borderRadius: '8px',
       overflow: 'hidden',
-      background: '#1a1a1a',
+      background: '#ffffff',
       boxSizing: 'border-box'
     }}>
       <Canvas 
-        camera={{ position: [8, 8, 8], fov: 50 }}
-        style={{ background: '#292929', width: '100%', height: '100%' }}
+        camera={{ position: [10, 10, 0], fov: 50 }}
+        style={{ background: '#000000', width: '100%', height: '100%' }}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />

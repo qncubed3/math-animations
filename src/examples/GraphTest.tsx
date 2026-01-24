@@ -1,16 +1,16 @@
-import Card from "./Card";
-import { CoordsCardTwoD } from "./CoordsCardTwoD";
+import Card from "../components/Card";
+import { CoordsCard2D } from "../components/CoordsCard2D";
 
 export default function GraphTest() {
     return (
         <Card title={"Graph Test"} description={"testing"}>
-            <CoordsCardTwoD viewBox={{
+            <CoordsCard2D viewBox={{
                 x: [-4,4],
                 y: [-4,4],
                 padding: undefined
             }}>
                 
-            </CoordsCardTwoD>
+            </CoordsCard2D>
         </Card>
         
     )

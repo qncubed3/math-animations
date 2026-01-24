@@ -1,8 +1,9 @@
-import Card from "./Card"
+import Card from "../components/Card"
 import { Polygon, Plot, Theme, useMovablePoint, Vector } from "mafs"
 import { useState } from "react"
-import { CoordsCardTwoD } from "./CoordsCardTwoD"
+import { CoordsCard2D } from "../components/CoordsCard2D"
 import "mafs/core.css"
+import ResetButton from "../components/ResetButton"
 
 export function TransformFunction() {
     const [offset, setOffset] = useState<[number, number]>([1, 1])
@@ -86,16 +87,14 @@ export function TransformFunction() {
     }
 
     return (
-        <Card title="Transform Function" description="Drag the yellow point to scale/reflect, pink point to translate">
+        <Card 
+            title="Transform Function" 
+            description="Drag the yellow point to apply dilation and reflections, and the pink point to translate"
+        >
             <div className="mb-4">
-                <button
-                    onClick={handleReset}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                    Reset
-                </button>
+                <ResetButton onClick={handleReset}/>
             </div>
-            <CoordsCardTwoD viewBox={{ x: [-3, 3], y: [-3, 3] }}>
+            <CoordsCard2D viewBox={{ x: [-3, 3], y: [-3, 3] }}>
 
                 {/* Draw original function and transformed function */}
                 <Plot.OfX y={(x) => 2*Math.sin(x)} color={Theme.blue} opacity={0.3} />
@@ -119,7 +118,7 @@ export function TransformFunction() {
                 {/* Draw control points */}
                 {tipxy.element}
                 {origin.element}
-            </CoordsCardTwoD>
+            </CoordsCard2D>
         </Card>
     )
 }

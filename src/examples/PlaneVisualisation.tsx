@@ -1,7 +1,7 @@
 import { OrbitControls, Grid } from '@react-three/drei';
 import { useState, useMemo } from 'react';
 import * as THREE from 'three';
-import Scene3D from './Scene3D';
+import Scene3D from '../components/Scene3D';
 
 function Axes() {
   const axisLength = 10;
