@@ -19,6 +19,7 @@ interface Velocity {
 
 export default function CompoundVisualiser() {
     const [input, setInput] = useState("");
+    // @ts-ignore - compoundData not used
     const [compoundData, setCompoundData] = useState<CompoundData | null>(null);
     
     // Three.js refs
