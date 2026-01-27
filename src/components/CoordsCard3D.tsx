@@ -1,15 +1,12 @@
-import { Grid, OrbitControls, Text, Billboard } from "@react-three/drei";
-import { forwardRef, useImperativeHandle, useRef, type Ref } from "react";
-import Scene3D from "./Scene3D";
+//CoordsCard3D.tsx
+import { Grid, Text, Billboard } from "@react-three/drei";
+import { forwardRef, type Ref } from "react";
+import Scene3D, { type CoordsCard3DRef } from "./Scene3D";
 import * as THREE from "three"
 
 type CoordsCard3DProps = {
     height?: number,
     children?: React.ReactNode
-}
-
-export type CoordsCard3DRef = {
-    resetView: () => void;
 }
 
 function Axes() {
@@ -58,54 +55,10 @@ function CoordsCard3D({
     height = 400,
     children
 }: CoordsCard3DProps, ref: Ref<CoordsCard3DRef>) {
-    const controlsRef = useRef<any>(null);
 
-    const resetView = () => {
-        console.log("hi")
-        if (controlsRef.current) {
-            // Reset target (what the camera looks at)
-            controlsRef.current.target.set(0, 0, 0);
-            
-            // Smoothly animate camera back to default position
-            const camera = controlsRef.current.object;
-            const startPos = camera.position.clone();
-            const endPos = new THREE.Vector3(8, 8, 8);
-            const duration = 1000; // 1 second animation
-            const startTime = Date.now();
-
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Easing function for smooth animation (ease-out cubic)
-                const eased = 1 - Math.pow(1 - progress, 3);
-                
-                camera.position.lerpVectors(startPos, endPos, eased);
-                controlsRef.current.update();
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                }
-            };
-
-            animate();
-        }
-    };
-    
-    useImperativeHandle(ref, () => ({
-        resetView
-    }))
     return (
         <div style={{ height }} className="w-full rounded-lg overflow-hidden flex">
-            <Scene3D height={`${height}px`}>
-                <OrbitControls 
-                    ref={controlsRef}
-                    makeDefault 
-                    enableDamping 
-                    dampingFactor={0.1}
-                    rotateSpeed={0.5}
-                    minDistance={3}
-                />
+            <Scene3D height={`${height}px`} ref={ref}>
                 <Grid 
                     args={[20, 20]} 
                     cellSize={1} 

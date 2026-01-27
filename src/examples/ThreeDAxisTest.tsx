@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import Card from "../components/Card";
-import CoordsCard3D, { type CoordsCard3DRef } from "../components/CoordsCard3D";
+import CoordsCard3D from "../components/CoordsCard3D";
+import { type CoordsCard3DRef } from "../components/Scene3D";
 import { Plane3D } from "../components/Plane3D";
 import ResetButton from "../components/ResetButton";
 

@@ -7,6 +7,7 @@ import ThreeDScene from './examples/ThreeDScene';
 import ThreeDAxisTest from './examples/ThreeDAxisTest';
 import VolumeOfRevolution from './examples/VolumeOfRevolution';
 import UnitCircle from './examples/UnitCircle';
+import CompoundVisualiser from './examples/CompoundVisualiser';
 
 export default function App() {
     return (
@@ -22,6 +23,7 @@ export default function App() {
 				<ThreeDAxisTest/>
 				<VolumeOfRevolution/>
 				<UnitCircle/>
+				<CompoundVisualiser/>
 				<Card title="Test Card" description="This is a test">
 					<div className="p-4">
 						hi
