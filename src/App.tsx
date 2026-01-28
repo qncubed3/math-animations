@@ -21,23 +21,13 @@ export default function App() {
 				<TransformFunction/>
 				<GraphTest/>
 				<ThreeDAxisTest/>
-				<VolumeOfRevolution/>
 				<UnitCircle/>
 				<CompoundVisualiser/>
-				<Card title="Test Card" description="This is a test">
-					<div className="p-4">
-						hi
-					</div>
-				</Card>
-				<Card title="Test Card" description="This is a test">
-					<div className="p-4">
-						hi
-					</div>
-				</Card>
+				<VolumeOfRevolution/>
 					
-				<UnitCircleVisualization />
-				<PlaneVisualization />
-				<ThreeDScene/>
+				{/* <UnitCircleVisualization /> */}
+				{/* <PlaneVisualization /> */}
+				{/* <ThreeDScene/> */}
 			</div>
 		</div>
     );
