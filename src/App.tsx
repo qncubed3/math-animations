@@ -1,9 +1,9 @@
-import PlaneVisualization from './examples/PlaneVisualisation';
-import UnitCircleVisualization from './examples/UnitCircleVisualisation';
-import Card from './components/Card';
+// import PlaneVisualization from './examples/PlaneVisualisation';
+// import UnitCircleVisualization from './examples/UnitCircleVisualisation';
+// import Card from './components/Card';
 import { TransformFunction } from './examples/TransformFunction';
 import GraphTest from './examples/GraphTest';
-import ThreeDScene from './examples/ThreeDScene';
+// import ThreeDScene from './examples/ThreeDScene';
 import ThreeDAxisTest from './examples/ThreeDAxisTest';
 import VolumeOfRevolution from './examples/VolumeOfRevolution';
 import UnitCircle from './examples/UnitCircle';
