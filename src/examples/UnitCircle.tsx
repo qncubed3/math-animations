@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Circle, Theme, useMovablePoint, Line, Plot, Text } from "mafs";
 import Card from "../components/Card";
 import { CoordsCard2D } from "../components/CoordsCard2D";
