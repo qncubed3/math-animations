@@ -39,6 +39,7 @@ export default function VolumeOfRevolution() {
                 {/* Ambient light for general illumination */}
                 <ambientLight intensity={0.4} />
                 <ParametricCurve 
+                    // @ts-ignore
                     x={t => 0} 
                     y={t => Math.sin(6*t)+5} 
                     z={t => 8*t-4}    
@@ -47,6 +48,7 @@ export default function VolumeOfRevolution() {
                 <ParametricSurface
                     x={(u, v) => (Math.sin(6 * u) + 5) * Math.cos(v * Math.PI * 2)}
                     y={(u, v) => (Math.sin(6 * u) + 5) * Math.sin(v * Math.PI * 2)}
+                    // @ts-ignore
                     z={(u, v) => 8 * u-4}
                     color="yellow"
                     opacity={0.5}
