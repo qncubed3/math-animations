@@ -56,9 +56,10 @@ export default function CompoundVisualiser() {
         camera.position.z = 10;
         cameraRef.current = camera;
 
-        // Create renderer
+        // Create renderer with high-DPI support
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio); // Fixes blurriness on high-DPI screens
         container.appendChild(renderer.domElement);
         rendererRef.current = renderer;
 
@@ -112,33 +113,48 @@ export default function CompoundVisualiser() {
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
+            renderer.setPixelRatio(window.devicePixelRatio); // Update pixel ratio on resize
         };
 
         const resizeObserver = new ResizeObserver(handleResize);
         resizeObserver.observe(container);
         window.addEventListener("resize", handleResize);
 
-        // Mouse event handlers
-        const onMouseDown = (e: MouseEvent) => {
+        // Unified pointer event handlers (works for both mouse and touch)
+        const getPointerPosition = (e: MouseEvent | TouchEvent): { x: number; y: number } => {
+            if ('touches' in e && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if ('clientX' in e) {
+                return { x: e.clientX, y: e.clientY };
+            }
+            return mouseStateRef.current.previousPosition;
+        };
+
+        const onPointerDown = (e: MouseEvent | TouchEvent) => {
+            e.preventDefault(); // Prevent default touch behavior
             mouseStateRef.current.isDragging = true;
             mouseStateRef.current.dragStarted = false;
             velocityRef.current = { x: 0, y: 0 };
-            mouseStateRef.current.previousPosition = { x: e.clientX, y: e.clientY };
+            mouseStateRef.current.previousPosition = getPointerPosition(e);
         };
 
-        const onMouseUp = () => {
+        const onPointerUp = () => {
             mouseStateRef.current.isDragging = false;
             mouseStateRef.current.dragStarted = false;
         };
 
-        const onMouseMove = (e: MouseEvent) => {
+        const onPointerMove = (e: MouseEvent | TouchEvent) => {
+            const position = getPointerPosition(e);
+            
             if (!mouseStateRef.current.isDragging || !moleculeRef.current) {
-                mouseStateRef.current.previousPosition = { x: e.clientX, y: e.clientY };
+                mouseStateRef.current.previousPosition = position;
                 return;
             }
 
-            const deltaX = e.clientX - mouseStateRef.current.previousPosition.x;
-            const deltaY = e.clientY - mouseStateRef.current.previousPosition.y;
+            e.preventDefault(); // Prevent scrolling while dragging
+
+            const deltaX = position.x - mouseStateRef.current.previousPosition.x;
+            const deltaY = position.y - mouseStateRef.current.previousPosition.y;
 
             if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
                 mouseStateRef.current.dragStarted = true;
@@ -154,7 +170,7 @@ export default function CompoundVisualiser() {
                 y: deltaX * rotationSpeed
             };
 
-            mouseStateRef.current.previousPosition = { x: e.clientX, y: e.clientY };
+            mouseStateRef.current.previousPosition = position;
         };
 
         const onWheel = (e: WheelEvent) => {
@@ -167,11 +183,50 @@ export default function CompoundVisualiser() {
             camera.position.z = Math.max(3, Math.min(20, newZ));
         };
 
+        // Pinch-to-zoom for touch devices
+        let lastTouchDistance = 0;
+        const onTouchMove = (e: TouchEvent) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                
+                const dx = touch2.clientX - touch1.clientX;
+                const dy = touch2.clientY - touch1.clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (lastTouchDistance > 0) {
+                    const delta = lastTouchDistance - distance;
+                    const zoomSpeed = 0.02;
+                    const newZ = camera.position.z + delta * zoomSpeed;
+                    camera.position.z = Math.max(3, Math.min(20, newZ));
+                }
+                
+                lastTouchDistance = distance;
+            } else {
+                lastTouchDistance = 0;
+                onPointerMove(e);
+            }
+        };
+
+        const onTouchEnd = () => {
+            lastTouchDistance = 0;
+            onPointerUp();
+        };
+
         const canvas = renderer.domElement;
-        canvas.addEventListener("mousedown", onMouseDown);
-        canvas.addEventListener("mouseup", onMouseUp);
-        canvas.addEventListener("mousemove", onMouseMove);
+        
+        // Mouse events
+        canvas.addEventListener("mousedown", onPointerDown);
+        canvas.addEventListener("mouseup", onPointerUp);
+        canvas.addEventListener("mousemove", onPointerMove);
         canvas.addEventListener("wheel", onWheel, { passive: false });
+        
+        // Touch events
+        canvas.addEventListener("touchstart", onPointerDown, { passive: false });
+        canvas.addEventListener("touchend", onTouchEnd);
+        canvas.addEventListener("touchmove", onTouchMove, { passive: false });
 
         // Cleanup
         return () => {
@@ -180,10 +235,13 @@ export default function CompoundVisualiser() {
             }
             resizeObserver.disconnect();
             window.removeEventListener("resize", handleResize);
-            canvas.removeEventListener("mousedown", onMouseDown);
-            canvas.removeEventListener("mouseup", onMouseUp);
-            canvas.removeEventListener("mousemove", onMouseMove);
+            canvas.removeEventListener("mousedown", onPointerDown);
+            canvas.removeEventListener("mouseup", onPointerUp);
+            canvas.removeEventListener("mousemove", onPointerMove);
             canvas.removeEventListener("wheel", onWheel);
+            canvas.removeEventListener("touchstart", onPointerDown);
+            canvas.removeEventListener("touchend", onTouchEnd);
+            canvas.removeEventListener("touchmove", onTouchMove);
             if (container && renderer.domElement.parentNode === container) {
                 container.removeChild(renderer.domElement);
             }
@@ -218,7 +276,7 @@ export default function CompoundVisualiser() {
     return (
         <Card
             title="Chemical Compound Visualiser"
-            description="Drag to rotate, scroll to zoom"
+            description="Drag to rotate, pinch/scroll to zoom"
         >
             <div className="mb-6">
                 <input
@@ -226,7 +284,7 @@ export default function CompoundVisualiser() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    placeholder="Enter compound name or CID"
+                    placeholder="eg: glucose"
                     className="border border-black rounded-sm focus:ring-2 p-1 px-2 mr-2"
                 />
                 <button
