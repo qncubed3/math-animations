@@ -8,23 +8,27 @@ import ThreeDAxisTest from './examples/ThreeDAxisTest';
 import VolumeOfRevolution from './examples/VolumeOfRevolution';
 import UnitCircle from './examples/UnitCircle';
 import CompoundVisualiser from './examples/CompoundVisualiser';
+import Esterification from './examples/Esterification';
+import Test from './examples/Esterification';
 
 export default function App() {
     return (
 		<div className="w-full bg-[#f5f5f5] min-h-screen px-5 py-10 font-sans flex flex-col items-center">
 			<div className="w-full max-w-4xl">
 				<h1 className="text-gray-900 mb-10 text-4xl font-bold">
-					Math 
+					Math and Science Interactive Lessons Prototype
 				</h1>
 					
-					
+				<Esterification/>
 				<TransformFunction/>
-				<GraphTest/>
+				{/* <GraphTest/> */}
 				<ThreeDAxisTest/>
-				<UnitCircle/>
 				<CompoundVisualiser/>
 				<VolumeOfRevolution/>
-					
+				<UnitCircle/>
+				
+				
+				
 				{/* <UnitCircleVisualization /> */}
 				{/* <PlaneVisualization /> */}
 				{/* <ThreeDScene/> */}

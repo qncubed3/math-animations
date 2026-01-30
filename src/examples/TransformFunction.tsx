@@ -89,7 +89,7 @@ export function TransformFunction() {
     return (
         <Card 
             title="Transform Function" 
-            description="Drag the yellow point to apply dilation and reflections, and the pink point to translate"
+            description="Drag the yellow point to apply dilation and reflections, and the pink point to translate. Interactive lesson idea: finding general transformations, see VCAA 2019 MM34 Exam 2 Section B Question 3e"
         >
             <div className="mb-4">
                 <ResetButton onClick={handleReset}/>

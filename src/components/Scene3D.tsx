@@ -8,6 +8,12 @@ import * as THREE from "three"
 interface Scene3DProps {
 	children: ReactNode;
 	height?: string;
+	camera?: CameraProps
+}
+
+export interface CameraProps {
+	position?: [number, number, number];
+	fov?: number
 }
 
 export type CoordsCard3DRef = {
@@ -15,7 +21,7 @@ export type CoordsCard3DRef = {
 }
 
 function Scene3D(
-	{ children, height = '500px' }: Scene3DProps, 
+	{ children, height = '500px', camera }: Scene3DProps, 
 	ref: ForwardedRef<CoordsCard3DRef>
 ) {
 	const controlsRef = useRef<any>(null);
@@ -67,7 +73,7 @@ function Scene3D(
 			boxSizing: 'border-box'
 		}}>
 		<Canvas 
-			camera={{ position: [10, 10, 0], fov: 50 }}
+			camera={camera ?? { position: [10, 10, 0], fov: 50 }}
 			style={{ background: '#000000', width: '100%', height: '100%' }}
 		>
 			<OrbitControls 

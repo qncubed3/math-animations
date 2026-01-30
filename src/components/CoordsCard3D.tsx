@@ -1,7 +1,7 @@
 //CoordsCard3D.tsx
 import { Grid, Text, Billboard } from "@react-three/drei";
 import { forwardRef, type Ref } from "react";
-import Scene3D, { type CoordsCard3DRef } from "./Scene3D";
+import Scene3D, { type CameraProps, type CoordsCard3DRef } from "./Scene3D";
 import * as THREE from "three"
 
 type AxisConfig = {
@@ -20,6 +20,7 @@ type CoordsCard3DProps = {
     zAxis?: AxisConfig
     grid? :boolean
     children?: React.ReactNode
+    camera?: CameraProps
 }
 
 function Axes({
@@ -102,12 +103,13 @@ function CoordsCard3D({
     xAxis = { lines: 1, label: "X" },
     yAxis = { lines: 1, label: "Y" },
     zAxis = { lines: 1, label: "Z" },
-    grid = true
+    grid = true,
+    camera
 }: CoordsCard3DProps, ref: Ref<CoordsCard3DRef>) {
 
     return (
         <div style={{ height }} className="w-full rounded-lg overflow-hidden flex">
-            <Scene3D height={`${height}px`} ref={ref}>
+            <Scene3D height={`${height}px`} ref={ref} camera={camera}>
                 {grid && 
                     <Grid 
                         args={[20, 20]} 
