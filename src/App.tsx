@@ -2,14 +2,12 @@
 // import UnitCircleVisualization from './examples/UnitCircleVisualisation';
 // import Card from './components/Card';
 import { TransformFunction } from './examples/TransformFunction';
-import GraphTest from './examples/GraphTest';
 // import ThreeDScene from './examples/ThreeDScene';
 import ThreeDAxisTest from './examples/ThreeDAxisTest';
 import VolumeOfRevolution from './examples/VolumeOfRevolution';
 import UnitCircle from './examples/UnitCircle';
 import CompoundVisualiser from './examples/CompoundVisualiser';
 import Esterification from './examples/Esterification';
-import Test from './examples/Esterification';
 
 export default function App() {
     return (
