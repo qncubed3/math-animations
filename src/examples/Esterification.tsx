@@ -30,7 +30,19 @@ import { polygonHull } from 'd3-polygon';
 
             requestAnimationFrame(animate);
         }, [hasReacted]);
+        useEffect(() => {
+            if (!fgRef.current) return;
 
+            fgRef.current.d3Force('link')
+                .distance(20)
+                .strength(1);
+
+            fgRef.current.d3Force('charge')
+                .strength(-50)
+                .distanceMax(100);
+
+            fgRef.current.d3ReheatSimulation();
+        }, []);
         // Nodes
         const initialNodes = [
             { id: "C1", type: "carbon", color: "#555555", val: 10, symbol: "C" },
@@ -246,13 +258,14 @@ import { polygonHull } from 'd3-polygon';
                         nodeColor={node => node.color}
                         linkWidth={2}
                         linkColor={() => "#ffffff"}
+                        linkDistance={100}
                         enableNodeDrag={true}
                         enablePanInteraction={true}
                         enableZoomInteraction={true}
                         minZoom={0.5}
                         maxZoom={4}
                         backgroundColor="#000000"
-                        d3AlphaDecay={0.02}
+                        d3AlphaDecay={0.05}
                         d3VelocityDecay={0.3}
                         nodeCanvasObject={(node, ctx) => {
                             
