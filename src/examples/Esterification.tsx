@@ -70,7 +70,7 @@ export default function Esterification() {
     useEffect(() => {
         if (!hasReacted) return;
 
-        const duration = 100;
+        const duration = 200;
         const startTime = performance.now();
 
         const animate = (now) => {
@@ -342,7 +342,7 @@ export default function Esterification() {
                                 drawBuffedHull(water, ctx, `rgba(56, 189, 248, ${alpha})`, `rgba(56, 189, 248, ${strokeAlpha})`, false, 'Water', labelAlpha);
                             }
                             if (reactionEnabled && moleculeDist !== null && moleculeDist < 50 && !hasReacted) {
-                                const strokeAlpha = Math.min(0.8, 0.02 * (50 - moleculeDist));
+                                const strokeAlpha = Math.min(0.3, 0.02 * (50 - moleculeDist));
                                 const alpha = 0.05 * strokeAlpha;
                                 const labelAlpha = Math.min(0.9, strokeAlpha);
                                 drawBuffedHull(water, ctx, `rgba(56, 189, 248, ${alpha})`, `rgba(56, 189, 248, ${strokeAlpha})`, true, 'Water', labelAlpha);
