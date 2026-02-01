@@ -294,7 +294,7 @@ export default function Esterification() {
                     graphData={graphData}
                     nodeVal={node => node.val}
                     nodeColor={node => node.color}
-                    linkWidth={2}
+                    linkWidth={0}
                     linkColor={() => "#ffffff"}
                     linkDistance={100}
                     enableNodeDrag={true}
@@ -305,6 +305,48 @@ export default function Esterification() {
                     backgroundColor="#000000"
                     d3AlphaDecay={0.05}
                     d3VelocityDecay={0.3}
+                    linkCanvasObject={(link, ctx) => {
+                        const source = link.source;
+                        const target = link.target;
+
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+
+                        const doubleBonds = [
+                            ["C5", "O2"],
+                        ];
+
+                        const isDouble = doubleBonds.some(([a, b]) =>
+                            (getId(source) === a && getId(target) === b) ||
+                            (getId(source) === b && getId(target) === a)
+                        );
+
+                        if (!isDouble) {
+                            ctx.beginPath();
+                            ctx.moveTo(source.x, source.y);
+                            ctx.lineTo(target.x, target.y);
+                            ctx.stroke();
+                            return;
+                        }
+
+                        const dx = target.x - source.x;
+                        const dy = target.y - source.y;
+                        const len = Math.hypot(dx, dy);
+
+                        const offset = 2;
+                        const nx = -dy / len * offset;
+                        const ny = dx / len * offset;
+
+                        ctx.beginPath();
+                        ctx.moveTo(source.x + nx, source.y + ny);
+                        ctx.lineTo(target.x + nx, target.y + ny);
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(source.x - nx, source.y - ny);
+                        ctx.lineTo(target.x - nx, target.y - ny);
+                        ctx.stroke();
+                    }}
                     nodeCanvasObject={(node, ctx) => {
                         
                         if (node.id === "C1") {
