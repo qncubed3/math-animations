@@ -1,10 +1,10 @@
 // @ts-nocheck
 import React, { useRef, useState, useEffect } from "react";
-import ForceGraph2D from "react-force-graph-2d";
+import ForceGraph2D, { type ForceGraphMethods } from "react-force-graph-2d";
 import Card from "../components/Card";
 import ResetButton from "../components/ResetButton";
-import { ConvexHull } from "three/examples/jsm/Addons.js";
 import { polygonHull } from 'd3-polygon';
+import drawBuffedHull from "../utils/d3/drawBuffedHull";
 
 export default function Esterification() {
 
@@ -57,7 +57,7 @@ export default function Esterification() {
     ];
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const fgRef = useRef<any>(null);
+    const fgRef = useRef<ForceGraphMethods>(null);
     const labelPositions = useRef({});
     const [dimensions, setDimensions] = useState({ width: 600, height: 400 });
     const [reactionEnabled, setReactionEnabled] = useState(false);
@@ -135,7 +135,7 @@ export default function Esterification() {
                 const dy = nodeO1.y! - nodeC5.y!;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 setMoleculeDist(dist)
-                const threshold = 20;
+                const threshold = 12;
                 if (dist >= threshold) return prev;
 
                 let newLinks = [...prev.links];
@@ -180,96 +180,41 @@ export default function Esterification() {
 
 
         // 1. Compute basic convex hull (sharp corners, no padding)
-    const drawBuffedHull = (
-        nodeIds, 
-        ctx, 
-        fillColor: string, 
-        strokeColor: string,
-        isDashed: boolean = false,
-        label?: string,
+
+    const getConvexHull = (
+        nodeList,
+        targetNodeIds
     ) => {
-        const nodes = graphData.nodes.filter(n => nodeIds.includes(n.id));
+        const nodes = nodeList.filter(n => targetNodeIds.includes(n.id))
         const points = nodes
             .filter(n => n.x !== undefined && n.y !== undefined)
             .map(n => [n.x, n.y]);
-        
-        const convexHull = polygonHull(points);
-        
-        if (!convexHull || convexHull.length < 3) return;
+        return polygonHull(points)
+    }
+    
+    const drawLabel = (ctx, convexHull, label, strokeColor, buff=20) => {
 
-        const buff = 20;
+        if (!convexHull) return
 
-        const getEdgeNormal = (
-            from: [number, number], 
-            to: [number, number]
-        ): [number, number] => {
-            const dx = to[0] - from[0];
-            const dy = to[1] - from[1];
-            const len = Math.hypot(dx, dy);
-            return [-buff * dy / len, buff * dx / len];
-        };
+        const centerX = convexHull.reduce((sum, p) => sum + p[0], 0) / convexHull.length;
+        const topY = Math.min(...convexHull.map(p => p[1]));
+        const targetLabelY = topY - buff - 10;
 
-        // For each edge, compute the two offset points
-        const edges: { start: [number, number], end: [number, number], normal: [number, number] }[] = [];
-        for (let i = 0; i < convexHull.length; i++) {
-            const curr = convexHull[i];
-            const next = convexHull[(i + 1) % convexHull.length];
-            const normal = getEdgeNormal(curr, next);
-            edges.push({
-                start: [curr[0] + normal[0], curr[1] + normal[1]],
-                end: [next[0] + normal[0], next[1] + normal[1]],
-                normal
-            });
+        // Smooth the position with lerp
+        if (!labelPositions.current[label]) {
+            labelPositions.current[label] = { x: centerX, y: targetLabelY };
         }
 
-        ctx.fillStyle = fillColor;
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 2;
-        ctx.setLineDash(isDashed ? [5, 5] : []);
-        ctx.beginPath();
+        const smoothing = 0.1; // Lower = smoother but more lag, higher = snappier
+        labelPositions.current[label].x += (centerX - labelPositions.current[label].x) * smoothing;
+        labelPositions.current[label].y += (targetLabelY - labelPositions.current[label].y) * smoothing;
 
-        for (let i = 0; i < convexHull.length; i++) {
-            const prevEdge = edges[(i - 1 + edges.length) % edges.length];
-            const currEdge = edges[i];
-            const corner = convexHull[i]; // Arc center
-
-            // Arc from end of previous edge to start of current edge, centered on the original hull vertex
-            const startAngle = Math.atan2(prevEdge.end[1] - corner[1], prevEdge.end[0] - corner[0]);
-            const endAngle = Math.atan2(currEdge.start[1] - corner[1], currEdge.start[0] - corner[0]);
-
-            ctx.arc(corner[0], corner[1], buff, startAngle, endAngle, true);
-
-            // Line along the current offset edge
-            ctx.lineTo(currEdge.end[0], currEdge.end[1]);
-        }
-
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        if (label) {
-            const centerX = convexHull.reduce((sum, p) => sum + p[0], 0) / convexHull.length;
-            const topY = Math.min(...convexHull.map(p => p[1]));
-            const targetLabelY = topY - buff - 10;
-
-            // Smooth the position with lerp
-            if (!labelPositions.current[label]) {
-                labelPositions.current[label] = { x: centerX, y: targetLabelY };
-            }
-
-            const smoothing = 0.1; // Lower = smoother but more lag, higher = snappier
-            labelPositions.current[label].x += (centerX - labelPositions.current[label].x) * smoothing;
-            labelPositions.current[label].y += (targetLabelY - labelPositions.current[label].y) * smoothing;
-
-            ctx.fillStyle = strokeColor;
-            ctx.font = '14px Sans-Serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(label, labelPositions.current[label].x, labelPositions.current[label].y);
-        }
-
-        ctx.setLineDash([]);
-    };                      
+        ctx.fillStyle = strokeColor;
+        ctx.font = '14px Sans-Serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(label, labelPositions.current[label].x, labelPositions.current[label].y);
+    }
 
 
     const ethanol = ["C1", "C2", "O1", "H1", "H2", "H3", "H4", "H5", "H6"];
@@ -355,16 +300,24 @@ export default function Esterification() {
                                 // Ethanol
                                 const alpha = 0.2 * (1 - reactionProgress);
                                 const strokeAlpha = 0.5 * (1 - reactionProgress);
-                                const labelAlpha = 0.9 * (1 - reactionProgress);
-                                drawBuffedHull(ethanol, ctx, `rgba(236, 72, 153, ${alpha})`, `rgba(236, 72, 153, ${strokeAlpha})`, false, 'Ethanol', labelAlpha);
+                                const convexHull = getConvexHull(graphData.nodes, ethanol)
+                                drawBuffedHull(ctx, convexHull, {
+                                    fillColor: `rgba(236, 72, 153, ${alpha})`,
+                                    strokeColor: `rgba(236, 72, 153, ${strokeAlpha})`
+                                });
+                                drawLabel(ctx, convexHull, 'Ethanol', `rgba(236, 72, 153, ${strokeAlpha})`)
                             }
                             if (hasReacted) {
                                 // Fade in: alpha goes from 0 to 0.2
                                 // Ethyl Propanoate
                                 const alpha = 0.2 * reactionProgress;
                                 const strokeAlpha = 0.5 * reactionProgress;
-                                const labelAlpha = 0.9 * reactionProgress;
-                                drawBuffedHull(ethylPropanoate, ctx, `rgba(167, 139, 250, ${alpha})`, `rgba(167, 139, 250, ${strokeAlpha})`, false, 'Ethyl Propanoate', labelAlpha);
+                                const convexHull = getConvexHull(graphData.nodes, ethylPropanoate)
+                                drawBuffedHull(ctx, convexHull, { 
+                                    fillColor: `rgba(167, 139, 250, ${alpha})`, 
+                                    strokeColor: `rgba(167, 139, 250, ${strokeAlpha})` 
+                                })
+                                drawLabel(ctx, convexHull, 'Ethyl Propanoate', `rgba(167, 139, 250, ${strokeAlpha})`)
                             }
                         }
 
@@ -373,21 +326,35 @@ export default function Esterification() {
                             if (!hasReacted || reactionProgress < 1) {
                                 const alpha = 0.2 * (1 - reactionProgress);
                                 const strokeAlpha = 0.5 * (1 - reactionProgress);
-                                const labelAlpha = 0.9 * (1 - reactionProgress);
-                                drawBuffedHull(propanoicAcid, ctx, `rgba(234, 179, 8, ${alpha})`, `rgba(234, 179, 8, ${strokeAlpha})`, false, 'Propanoic Acid', labelAlpha);
+                                const convexHull = getConvexHull(graphData.nodes, propanoicAcid)
+                                drawBuffedHull(ctx, convexHull, {
+                                    fillColor: `rgba(234, 179, 8, ${alpha})`,
+                                    strokeColor: `rgba(234, 179, 8, ${strokeAlpha})`
+                                });
+                                drawLabel(ctx, convexHull, 'Propanoic Acid', `rgba(234, 179, 8, ${strokeAlpha})`)
                             }
                             if (hasReacted) {
                                 // Water
                                 const alpha = 0.2 * reactionProgress;
                                 const strokeAlpha = 0.5 * reactionProgress;
-                                const labelAlpha = 0.9 * reactionProgress;
-                                drawBuffedHull(water, ctx, `rgba(56, 189, 248, ${alpha})`, `rgba(56, 189, 248, ${strokeAlpha})`, false, 'Water', labelAlpha);
+                                const convexHull = getConvexHull(graphData.nodes, water)
+                                drawBuffedHull(ctx, convexHull, {
+                                    fillColor: `rgba(56, 189, 248, ${alpha})`,
+                                    strokeColor: `rgba(56, 189, 248, ${strokeAlpha})`
+                                });
+                                drawLabel(ctx, convexHull, "Water", `rgba(56, 189, 248, ${strokeAlpha})`)
                             }
                             if (reactionEnabled && moleculeDist !== null && moleculeDist < 50 && !hasReacted) {
                                 const strokeAlpha = Math.min(0.3, 0.02 * (50 - moleculeDist));
                                 const alpha = 0.05 * strokeAlpha;
-                                const labelAlpha = Math.min(0.9, strokeAlpha);
-                                drawBuffedHull(water, ctx, `rgba(56, 189, 248, ${alpha})`, `rgba(56, 189, 248, ${strokeAlpha})`, true, 'Water', labelAlpha);
+                                const convexHull = getConvexHull(graphData.nodes, water)
+                                drawBuffedHull(ctx, convexHull, {
+                                    fillColor: `rgba(56, 189, 248, ${alpha})`,
+                                    strokeColor: `rgba(56, 189, 248, ${strokeAlpha})`,
+                                    isDashed: true,
+                                    buff: 15
+                                });
+                                drawLabel(ctx, convexHull, "Water", `rgba(56, 189, 248, ${strokeAlpha})`)
                             }
                         }
                         
