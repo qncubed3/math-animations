@@ -1,5 +1,21 @@
 import type { CompoundData, PubChemResponse } from "./types";
 
+interface AtomData {
+    id: number;
+    element: number;
+}
+
+interface BondData {
+    source: number;
+    target: number;
+    order: number;
+}
+
+interface MoleculeStructure {
+    atoms: AtomData[];
+    bonds: BondData[];
+}
+
 const PUBCHEM_BASE = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug';
 
 async function fetchJSON(url: string) {
@@ -48,3 +64,48 @@ export async function fetchCompound(name: string): Promise<CompoundData | null> 
         recordData: recordData
     }
 }
+
+export async function extractCompoundStucture(name: string): Promise<MoleculeStructure | null> {
+    const compound = await fetchCompound(name);
+
+    if (!compound) {
+        return null
+    }
+    
+    const atomsData = compound?.recordData?.PC_Compounds?.[0]?.atoms
+    const atoms: AtomData[] = atomsData?.aid.map((id, index) => ({
+        id,
+        element: atomsData.element[index]
+    }))
+
+    const bondsData = compound?.recordData?.PC_Compounds?.[0]?.bonds
+    const bonds: BondData[] = bondsData?.aid1.map((from, index) => ({
+        source: from,
+        target: bondsData.aid2[index],
+        order: bondsData.order[index]
+    }));
+
+    return {
+        atoms,
+        bonds
+    }
+    
+
+}
+
+async function main() {
+    const name = process.argv.slice(2).join(" ");
+    if (!name) {
+        console.error("Usage: ts-node fetchCompound.ts <compound-name>");
+        process.exit(1);
+    }
+
+    const result = await extractCompoundStucture(name);
+    console.log(JSON.stringify(result, null, 4));
+}
+
+
+main().catch(err => {
+    console.error(err);
+    process.exit(1);
+});
