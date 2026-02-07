@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import Card from "../components/Card";
 import ResetButton from "../components/ResetButton";
 import { polygonHull } from 'd3-polygon';
