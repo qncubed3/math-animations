@@ -1,19 +1,21 @@
 import type { CompoundData, PubChemResponse } from "./types";
 
-interface AtomData {
-    id: number;
+export interface AtomNode {
+    id: string;
     element: number;
+    x?: number;
+    y?: number;
 }
 
-interface BondData {
-    source: number;
-    target: number;
+export interface BondLink {
+    source: string;
+    target: string;
     order: number;
 }
 
-interface MoleculeStructure {
-    atoms: AtomData[];
-    bonds: BondData[];
+export interface MoleculeGraph {
+    atoms: AtomNode[];
+    bonds: BondLink[];
 }
 
 const PUBCHEM_BASE = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug';
@@ -65,7 +67,7 @@ export async function fetchCompound(name: string): Promise<CompoundData | null> 
     }
 }
 
-export async function extractCompoundStucture(name: string): Promise<MoleculeStructure | null> {
+export async function extractCompoundStucture(name: string): Promise<MoleculeGraph | null> {
     const compound = await fetchCompound(name);
 
     if (!compound) {
@@ -73,15 +75,15 @@ export async function extractCompoundStucture(name: string): Promise<MoleculeStr
     }
     
     const atomsData = compound?.recordData?.PC_Compounds?.[0]?.atoms
-    const atoms: AtomData[] = atomsData?.aid.map((id, index) => ({
-        id,
+    const atoms: AtomNode[] = atomsData?.aid.map((id, index) => ({
+        id: String(id),
         element: atomsData.element[index]
     }))
 
     const bondsData = compound?.recordData?.PC_Compounds?.[0]?.bonds
-    const bonds: BondData[] = bondsData?.aid1.map((from, index) => ({
-        source: from,
-        target: bondsData.aid2[index],
+    const bonds: BondLink[] = bondsData?.aid1.map((from, index) => ({
+        source: String(from),
+        target: String(bondsData.aid2[index]),
         order: bondsData.order[index]
     }));
 
@@ -89,23 +91,22 @@ export async function extractCompoundStucture(name: string): Promise<MoleculeStr
         atoms,
         bonds
     }
-    
-
 }
 
-async function main() {
-    const name = process.argv.slice(2).join(" ");
-    if (!name) {
-        console.error("Usage: ts-node fetchCompound.ts <compound-name>");
-        process.exit(1);
-    }
+// async function main() {
+//     const name = process.argv.slice(2).join(" ");
+//     if (!name) {
+//         console.error("Usage: ts-node fetchCompound.ts <compound-name>");
+//         process.exit(1);
+//     }
 
-    const result = await extractCompoundStucture(name);
-    console.log(JSON.stringify(result, null, 4));
-}
+//     const result = await extractCompoundStucture(name);
+//     // const result = await fetchCompound(name)
+//     console.dir(result, { depth: null, colors: false });
+// }
 
 
-main().catch(err => {
-    console.error(err);
-    process.exit(1);
-});
+// main().catch(err => {
+//     console.error(err);
+//     process.exit(1);
+// });

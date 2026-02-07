@@ -1,8 +1,8 @@
 export interface drawBuffedHullOptions {
     fillColor: string;
     strokeColor: string;
-    isDashed: boolean;
-    buff: number;
+    isDashed?: boolean;
+    buff?: number;
 }
 
 export default function drawBuffedHull(
