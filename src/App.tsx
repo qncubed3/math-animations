@@ -8,6 +8,10 @@ import VolumeOfRevolution from './examples/VolumeOfRevolution';
 import UnitCircle from './examples/UnitCircle';
 import CompoundVisualiser from './examples/CompoundVisualiser';
 import Esterification from './examples/Esterification';
+import Neutralisation from './examples/AcidBaseNeutralisation';
+import HydroxideSubstitution from './examples/HydroxideSubstitution';
+import HaloalkaneAmmonia from './examples/HaloalkaneAmmonia';
+import AmideFormation from './examples/AmideFormation';
 
 export default function App() {
     return (
@@ -18,10 +22,16 @@ export default function App() {
 				</h1>
 					
 				<Esterification/>
+				<Neutralisation/>
+				<HydroxideSubstitution/>
+				<HaloalkaneAmmonia/>
+				<AmideFormation />
+				<CompoundVisualiser />
 				<TransformFunction/>
+				
 				{/* <GraphTest/> */}
 				<ThreeDAxisTest/>
-				<CompoundVisualiser/>
+				
 				<VolumeOfRevolution/>
 				<UnitCircle/>
 				

@@ -109,6 +109,7 @@ export default function MoleculeReaction(reactionData: MoleculeReactionData) {
         const points = nodes
             .filter(n => n.x !== undefined && n.y !== undefined)
             .map(n => [n.x!, n.y!] as [number, number]);
+        if (points.length == 2) return points
         return polygonHull(points);
     }
 
