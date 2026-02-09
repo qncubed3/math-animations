@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import ForceGraph2D, { type ForceGraphMethods, type NodeObject, type LinkObject } from "react-force-graph-2d";
 import { getAtomById } from "../utils/d3/atoms";
+import { shuoldUseBlackText } from "../utils/color";
 
 interface GraphNode {
     id: string;
@@ -53,12 +54,14 @@ const defaultNodeCanvasObject = (node: ForceGraphNode, ctx: CanvasRenderingConte
     if (!atom) return;
 
     const radius = atom.radius / 2;
+    const color = atom.color;
+
     ctx.beginPath();
     ctx.arc(node.x!, node.y!, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = atom.color;
+    ctx.fillStyle = color;
     ctx.fill();
 
-    ctx.fillStyle = node.element === 1 ? "#000000" : "#ffffff";
+    ctx.fillStyle = shuoldUseBlackText(color) ? "#000000" : "#ffffff";
     ctx.font = `${radius}px Sans-Serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";

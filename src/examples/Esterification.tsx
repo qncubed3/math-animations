@@ -1,23 +1,9 @@
-import { useRef, useState, useEffect } from "react";
-import Card from "../components/Card";
-import ResetButton from "../components/ResetButton";
-import { polygonHull } from 'd3-polygon';
-import drawBuffedHull from "../utils/d3/drawBuffedHull";
-import type { AtomNode, BondLink } from "../utils/pubchem/client";
-import MoleculeForceGraph from "../components/CompoundForceGraph";
-
-interface ReactionBondLink extends BondLink {
-    phase?: 'shared' | 'reactant' | 'product';
-}
-
-interface MoleculeAnnotation {
-    name: string;
-    atomIds: string[];
-    color: [number, number, number];
-    phase?: 'reactant' | 'product' | 'toproduct'
-}
+import type { MoleculeAnnotation, MoleculeReactionData, ReactionBondLink } from "../components/MoleculeReaction";
+import MoleculeReaction from "../components/MoleculeReaction";
+import type { AtomNode } from "../utils/pubchem/client";
 
 const initialNodes: AtomNode[] = [
+    // Ethanol
     { id: "C1", element: 6 },
     { id: "C2", element: 6 },
     { id: "O1", element: 8 },
@@ -28,6 +14,7 @@ const initialNodes: AtomNode[] = [
     { id: "H5", element: 1 },
     { id: "H6", element: 1 },
 
+    // Propanoic acid
     { id: "C3", element: 6 },
     { id: "C4", element: 6 },
     { id: "C5", element: 6 },
@@ -39,6 +26,15 @@ const initialNodes: AtomNode[] = [
     { id: "H10", element: 1 },
     { id: "H11", element: 1 },
     { id: "H12", element: 1 },
+
+    // Sulfuric acid
+    { id: "S1", element: 16 },
+    { id: "O4", element: 8 },
+    { id: "O5", element: 8 },
+    { id: "O6", element: 8 },
+    { id: "O7", element: 8 },
+    { id: "H13", element: 1 },
+    { id: "H14", element: 1 },
 ];
 
 const reactingNodeIds: [string, string] = ["O1", "C5"];
@@ -62,6 +58,13 @@ const allLinks: ReactionBondLink[] = [
     { source: "C4", target: "C5", order: 1, phase: 'shared' },
     { source: "C5", target: "O2", order: 2, phase: 'shared' },
     { source: "O3", target: "H12", order: 1, phase: 'shared' },
+
+    { source: "S1", target: "O4", order: 1, phase: "shared"},
+    { source: "S1", target: "O5", order: 1, phase: "shared" },
+    { source: "S1", target: "O6", order: 2, phase: "shared" },
+    { source: "S1", target: "O7", order: 2, phase: "shared" },
+    { source: "O4", target: "H13", order: 1, phase: "shared" },
+    { source: "O5", target: "H14", order: 1, phase: "shared" },
 
     // Reactant-only bonds (broken during reaction)
     { source: "O1", target: "H6", order: 1, phase: 'reactant' },
@@ -101,187 +104,23 @@ const ethylPropanoate: MoleculeAnnotation = {
     phase: "product"
 };
 
-const moleculeAnnotations: MoleculeAnnotation[] = [ethanol, propanoicAcid, water, ethylPropanoate];
+const sulfuricAcid: MoleculeAnnotation = {
+    name: "Sulfuric Acid",
+    atomIds: ["S1", "O4", "O5", "O6", "O7", "H13", "H14"],
+    color: [204, 255, 0],
+    phase: "none"
+};
 
+const moleculeAnnotations: MoleculeAnnotation[] = [ethanol, propanoicAcid, water, ethylPropanoate, sulfuricAcid];
 
-export default function Esterification() {
-
-    const containerRef = useRef<HTMLDivElement>(null);
-    const labelPositions = useRef<Record<string, { x: number; y: number }>>({});
-
-    const [graphData, setGraphData] = useState({
-        nodes: initialNodes,
-        links: allLinks.filter(link => link.phase !== "product") // only shared and reactant
-    });
-    const [hasReacted, setHasReacted] = useState<boolean>(false);
-    const [moleculeDist, setMoleculeDist] = useState<number | null>(null);
-    const [reactionEnabled, setReactionEnabled] = useState<boolean>(false);
-    const [reactionProgress, setReactionProgress] = useState<number>(0);
-
-    // Enable reaction after short delay
-    useEffect(() => {
-        const timer = setTimeout(() => setReactionEnabled(true), 1500);
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Animate reactionProgress from 0 to 1
-    useEffect(() => {
-        if (!hasReacted) return;
-
-        const duration = 200;
-        const startTime = performance.now();
-
-        const animate = (now: number) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            setReactionProgress(progress);
-            if (progress < 1) requestAnimationFrame(animate);
-        };
-
-        requestAnimationFrame(animate);
-    }, [hasReacted]);
-
-    // Test for reaction
-    useEffect(() => {
-        if (!reactionEnabled) return;
-
-        const interval = setInterval(() => {
-            setGraphData(prev => {
-                const threshold = 12;
-
-                const reactingNode1 = prev.nodes.find(node => node.id === reactingNodeIds[0]);
-                const reactingNode2 = prev.nodes.find(node => node.id === reactingNodeIds[1]);
-
-                if (!reactingNode1 || !reactingNode2) return prev;
-
-                const dx = reactingNode1.x! - reactingNode2.x!;
-                const dy = reactingNode1.y! - reactingNode2.y!;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                setMoleculeDist(dist);
-
-                if (dist >= threshold) return prev;
-                setHasReacted(true);
-                return { ...prev, links: allLinks.filter(link => link.phase !== "reactant") };
-            });
-        }, 50);
-
-        return () => clearInterval(interval);
-    }, [reactionEnabled]);
-
-    // Reset lesson
-    const handleReset = () => {
-        setGraphData({
-            nodes: initialNodes,
-            links: allLinks.filter(link => link.phase !== "product") // only shared and reactant
-        });
-        setReactionEnabled(false);
-        setHasReacted(false);
-        setReactionProgress(0);
-        setMoleculeDist(100);
-        setTimeout(() => setReactionEnabled(true), 1500);
-    };
-
-    // Compute convex hull for molecule annotation
-    function getConvexHull(nodeList: AtomNode[], targetNodeIds: string[]): [number, number][] | null {
-        const nodes = nodeList.filter(n => targetNodeIds.includes(n.id));
-        const points = nodes
-            .filter(n => n.x !== undefined && n.y !== undefined)
-            .map(n => [n.x!, n.y!] as [number, number]);
-        return polygonHull(points);
-    }
-
-    // Draw label for molecule annotation
-    const drawLabel = (
-        ctx: CanvasRenderingContext2D,
-        convexHull: [number, number][] | null,
-        label: string,
-        strokeColor: string,
-        buff: number = 20
-    ): void => {
-
-        if (!convexHull) return;
-
-        const centerX = convexHull.reduce((sum, p) => sum + p[0], 0) / convexHull.length;
-        const topY = Math.min(...convexHull.map(p => p[1]));
-        const targetLabelY = topY - buff - 10;
-
-        // Smooth the position with lerp
-        if (!labelPositions.current[label]) {
-            labelPositions.current[label] = { x: centerX, y: targetLabelY };
-        }
-
-        const smoothing = 0.1; // Lower = smoother but more lag, higher = snappier
-        labelPositions.current[label].x += (centerX - labelPositions.current[label].x) * smoothing;
-        labelPositions.current[label].y += (targetLabelY - labelPositions.current[label].y) * smoothing;
-
-        ctx.fillStyle = strokeColor;
-        ctx.font = '14px Sans-Serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(label, labelPositions.current[label].x, labelPositions.current[label].y);
-    };
-
-    // Draw molecule annotation depending on phase of reaction
-    const onRenderFramePre = (ctx: CanvasRenderingContext2D): void => {
-
-        moleculeAnnotations.forEach(moleculeAnnotation => {
-            const phase = moleculeAnnotation.phase;
-            const [r, g, b] = moleculeAnnotation.color;
-
-            if (phase === "reactant") {
-                if (!hasReacted || reactionProgress < 1) {
-                    const alpha = 0.2 * (1 - reactionProgress);
-                    const strokeAlpha = 0.5 * (1 - reactionProgress);
-                    const convexHull = getConvexHull(graphData.nodes, moleculeAnnotation.atomIds);
-                    drawBuffedHull(ctx, convexHull, {
-                        fillColor: `rgba(${r}, ${g}, ${b}, ${alpha})`,
-                        strokeColor: `rgba(${r}, ${g}, ${b}, ${strokeAlpha})`
-                    });
-                    drawLabel(ctx, convexHull, moleculeAnnotation.name, `rgba(${r}, ${g}, ${b}, ${strokeAlpha})`);
-                }
-            } else if (phase === "product" || phase === "toproduct") {
-                if (hasReacted) {
-                    const alpha = 0.2 * reactionProgress;
-                    const strokeAlpha = 0.5 * reactionProgress;
-                    const convexHull = getConvexHull(graphData.nodes, moleculeAnnotation.atomIds);
-                    drawBuffedHull(ctx, convexHull, {
-                        fillColor: `rgba(${r}, ${g}, ${b}, ${alpha})`,
-                        strokeColor: `rgba(${r}, ${g}, ${b}, ${strokeAlpha})`
-                    });
-                    drawLabel(ctx, convexHull, moleculeAnnotation.name, `rgba(${r}, ${g}, ${b}, ${strokeAlpha})`);
-                }
-                if (phase === "toproduct" && reactionEnabled && moleculeDist !== null && moleculeDist < 50 && !hasReacted) {
-                    const strokeAlpha = Math.min(0.3, 0.02 * (50 - moleculeDist));
-                    const alpha = 0.05 * strokeAlpha;
-                    const convexHull = getConvexHull(graphData.nodes, moleculeAnnotation.atomIds);
-                    drawBuffedHull(ctx, convexHull, {
-                        fillColor: `rgba(${r}, ${g}, ${b}, ${alpha})`,
-                        strokeColor: `rgba(${r}, ${g}, ${b}, ${strokeAlpha})`,
-                        isDashed: true,
-                        buff: 15
-                    });
-                    drawLabel(ctx, convexHull, moleculeAnnotation.name, `rgba(${r}, ${g}, ${b}, ${strokeAlpha})`);
-                }
-            }
-        });
-    };
-
-
-    return (
-        <Card title="Esterification" description="Click and drag to pan, scroll to zoom. Drag atom O1 onto atom C5 to complete reaction. To turn this into a lesson, provide some compounds, students to identify reactive atoms for a given reaction.">
-            <ResetButton
-                onClick={handleReset}
-            />
-            <div
-                className="rounded-lg overflow-hidden mt-6"
-                ref={containerRef}
-                style={{ width: "100%", height: "600px" }}
-            >
-                <MoleculeForceGraph
-                    graphData={graphData}
-                    onRenderFramePre={onRenderFramePre}
-                />
-            </div>
-        </Card>
-    );
+const esterificationReactionData: MoleculeReactionData = {
+    name: "Esterification",
+    description: "Click and drag to pan, scroll to zoom. Drag atom O1 onto atom C5 to complete reaction. To turn this into a lesson, provide some compounds, students to identify reactive atoms for a given reaction.",
+    atoms: initialNodes,
+    bonds: allLinks,
+    reactingNodeIds: reactingNodeIds,
+    moleculeAnnotations: moleculeAnnotations,
 }
+
+const Esterification = () => MoleculeReaction(esterificationReactionData)
+export default Esterification
