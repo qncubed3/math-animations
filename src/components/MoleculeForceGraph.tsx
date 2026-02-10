@@ -1,3 +1,5 @@
+// MoleculeForceGraph.tsx
+
 import { useRef, useState, useEffect } from "react";
 import ForceGraph2D, { type ForceGraphMethods, type NodeObject, type LinkObject } from "react-force-graph-2d";
 import { getAtomById } from "../utils/d3/atoms";

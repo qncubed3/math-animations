@@ -1,3 +1,5 @@
+// drawBuffedHull.ts
+
 export interface drawBuffedHullOptions {
     fillColor: string;
     strokeColor: string;
@@ -32,27 +34,20 @@ export default function drawBuffedHull(
     const edges: { start: [number, number], end: [number, number], normal: [number, number] }[] = [];
 
     if (convexHull.length == 1) {
+        ctx.fillStyle = fillColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2;
+        ctx.setLineDash(isDashed ? [5, 5] : []);
+        ctx.beginPath();
         const center = convexHull[0];
-        const numSegments = 16; // More segments = smoother circle
 
-        for (let i = 0; i < numSegments; i++) {
-            const angle = (i / numSegments) * 2 * Math.PI;
-            const nextAngle = ((i + 1) / numSegments) * 2 * Math.PI;
+        ctx.arc(center[0], center[1], buff, 0, Math.PI * 2);
 
-            const x1 = center[0] + buff * Math.cos(angle);
-            const y1 = center[1] + buff * Math.sin(angle);
-            const x2 = center[0] + buff * Math.cos(nextAngle);
-            const y2 = center[1] + buff * Math.sin(nextAngle);
-
-            edges.push({
-                start: [x1, y1],
-                end: [x2, y2],
-                normal: [0, 0] // Not used for circle case
-            });
-
-            // Also duplicate the point in convexHull so the loop has the right number of iterations
-            if (i > 0) convexHull.push(center);
-        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+        return convexHull;
     } else if (convexHull.length == 2) {
         const curr = convexHull[0];
         const next = convexHull[1];

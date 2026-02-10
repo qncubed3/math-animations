@@ -1,3 +1,5 @@
+// MoleculeReaction.tsx
+
 import { useRef, useState, useEffect } from "react";
 import Card from "../components/Card";
 import ResetButton from "../components/ResetButton";
@@ -109,7 +111,7 @@ export default function MoleculeReaction(reactionData: MoleculeReactionData) {
         const points = nodes
             .filter(n => n.x !== undefined && n.y !== undefined)
             .map(n => [n.x!, n.y!] as [number, number]);
-        if (points.length == 2) return points
+        if (points.length < 3) return points
         return polygonHull(points);
     }
 
@@ -122,7 +124,7 @@ export default function MoleculeReaction(reactionData: MoleculeReactionData) {
         buff: number = 20
     ): void => {
 
-        if (!convexHull) return;
+        if (!convexHull || convexHull.length === 0) return;
 
         const centerX = convexHull.reduce((sum, p) => sum + p[0], 0) / convexHull.length;
         const topY = Math.min(...convexHull.map(p => p[1]));

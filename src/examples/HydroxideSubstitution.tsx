@@ -62,7 +62,7 @@ const chloride: MoleculeAnnotation = {
     name: "Chloride Ion",
     atomIds: ["Cl1"],
     color: [148, 163, 184],
-    phase: "product"
+    phase: "toproduct"
 };
 
 const moleculeAnnotations: MoleculeAnnotation[] = [chloroethane, hydroxide, ethanol, chloride];
